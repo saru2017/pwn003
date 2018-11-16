@@ -2,7 +2,7 @@
 
 ## 概要
 
-[http://inaz2.hatenablog.com/entry/2014/03/13/013056](Linux x86用のシェルコードを書いてみる) がとても分かりやすくほとんど個々の通りに実行した。
+[Linux x86用のシェルコードを書いてみる](http://inaz2.hatenablog.com/entry/2014/03/13/013056) がとても分かりやすくほとんど個々の通りに実行した。
 
 ## execveを使ったサンプルコード
 
@@ -458,7 +458,7 @@ saru@lucifen:~/pwn003$
 ## 参考サイト
 
 
-- [https://qiita.com/slowsingle/items/59c139b747edec9157cc](シェルコード書いてみた)
-- [http://inaz2.hatenablog.com/entry/2014/03/13/013056](Linux x86用のシェルコードを書いてみる)
-- [https://dhavalkapil.com/blogs/Buffer-Overflow-Exploit/](Buffer Overflow Exploit - Dhaval Kapil)
-- [https://dhavalkapil.com/blogs/Shellcode-Injection/](Shellcode Injection - Dhaval Kapil)
+- [シェルコード書いてみた](https://qiita.com/slowsingle/items/59c139b747edec9157cc)
+- [Linux x86用のシェルコードを書いてみる](http://inaz2.hatenablog.com/entry/2014/03/13/013056)
+- [Buffer Overflow Exploit - Dhaval Kapil](https://dhavalkapil.com/blogs/Buffer-Overflow-Exploit/)
+- [Shellcode Injection - Dhaval Kapil](https://dhavalkapil.com/blogs/Shellcode-Injection/)
