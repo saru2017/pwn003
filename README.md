@@ -57,7 +57,7 @@ saru@lucifen:~/pwn003$
 ```
 
 実行して成功した後に気付いたのだがNXは無効になっている？
-gdb-pedaで操作を追ってみると面白い。
+gdb-pedaで動作を追ってみると面白い。
 なるほど．．．
 
 ```
@@ -348,14 +348,18 @@ gdbでメモリの場所を調べる
 - 0xffffd4dc: return address
 - bufから140バイトでreturn addressに到達する
 
-https://wiki.mma.club.uec.ac.jp/ytoku/CTF/Writeup/AdventCalendarCTF2014/2014-12-17
+ところがいろいろやってみてもどうもうまくスタックに書き込めて無い様子。
+
+[ytoku/CTF/Writeup/AdventCalendarCTF2014/2014-12-17 - 電気通信大学MMA](https://wiki.mma.club.uec.ac.jp/ytoku/CTF/Writeup/AdventCalendarCTF2014/2014-12-17)
+
+> さらに，使用しているのがscanfであるためisspaceで空白とみなされる文字は使用できない。 09 0a 0b 0c 0d 20 (1cも？)を使用せずに入力を作成しなければならない。
 
 ということでscanfを使うと駄目みたい．．．
 
 ## 脆弱性のあるコード「gets」版
 
 scanfを使う場合Return Oriented Programming (ROP)を書けばできるらしい。
-が、ROPはまたさらに上級なテクニックということで今回はgetsを使って↑のシェルコードで実行するのを試みた。
+が、ROPはまたさらに上級なテクニックということで今回はシェルコードを素直に送り付けたやつをやりたかったのでgetsを使って↑のシェルコードで実行するのを試みた。
 
 ```c
 #include <stdio.h>
